@@ -1,266 +1,189 @@
-# ODC Mobile Template - Guide d'utilisation
+# ODC Mobile Template
 
+Ce projet est un template pour démarrer des applications mobiles Flutter en suivant une architecture claire et maintenable. Il inclut une configuration de base pour la gestion des dépendances, la gestion d'état, la navigation, et plus encore.
 
-## Comment cloner le projet
+## Table des matières
+- [Démarrage rapide](#démarrage-rapide)
+  - [Prérequis](#prérequis)
+  - [Clonage du dépôt](#clonage-du-dépôt)
+  - [Configuration du projet](#configuration-du-projet)
+- [Lancement du projet](#lancement-du-projet)
+- [Dépendances principales](#dépendances-principales)
+- [Structure du projet](#structure-du-projet)
+- [Guide d'implémentation](#guide-dimplémentation)
+  - [1. Créer un modèle](#1-créer-un-modèle)
+  - [2. Créer un service abstrait](#2-créer-un-service-abstrait)
+  - [3. Implémenter le service](#3-implémenter-le-service)
+  - [4. Écrire des tests](#4-écrire-des-tests)
+  - [5. Créer les pages de l'interface utilisateur](#5-créer-les-pages-de-linterface-utilisateur)
+  - [6. Configurer les routes](#6-configurer-les-routes)
+- [Générer une version de production](#générer-une-version-de-production)
+- [Lignes directrices pour le développement](#lignes-directrices-pour-le-développement)
 
+---
+
+## Démarrage rapide
+
+### Prérequis
+Assurez-vous d'avoir installé le [SDK Flutter](https://flutter.dev/docs/get-started/install) sur votre machine.
+
+### Clonage du dépôt
 ```bash
-git clone http://{{IP}}:{{PORT}}/{{VOTRE_USERNAME}}/{{PROJET}}.git {{NOM_DU_PROJET_MOBILE}}
-cd {{NOM_DU_PROJET_MOBILE}}
-git checkout dev
+# Clonez le dépôt en utilisant l'URL HTTPS ou SSH
+git clone <URL_DU_DEPOT> mon_projet_mobile
+
+# Accédez au répertoire du projet
+cd mon_projet_mobile
 ```
+⚠️ **Important** : La branche de travail principale est `dev`. Veuillez créer vos branches de fonctionnalités à partir de celle-ci.
 
-⚠️ **Important** : La branche de travail est toujours `dev`. Veuillez créer vos branches de fonctionnalités à partir de celle-ci.
+### Configuration du projet
 
-## Configuration du projet
-
-### Installation des dépendances
-
+#### 1. Installer les dépendances
 ```bash
 flutter pub get
 ```
 
-### Configuration du fichier .env
+#### 2. Configurer les variables d'environnement
+Le projet utilise un fichier `.env` pour gérer les variables d'environnement.
 
-1. Dupliquez le fichier `.env.example` et renommez-le en `.env`
-```bash
-cp .env.example .env
-```
+1.  Dupliquez le fichier `.env.example` et renommez-le en `.env`.
+    ```bash
+    cp .env.example .env
+    ```
+2.  Modifiez le fichier `.env` pour y ajouter vos configurations, comme l'URL de base de votre API.
+    ```
+    BASE_URL=http://VOTRE_IP_LOCALE:8000/api
+    ```
 
-2. Configurez les variables d'environnement dans le fichier `.env`:
-   - `BASE_URL`: URL du backend
-
-Pour obtenir l'adresse IP de votre machine sous Windows:
-```bash
-ipconfig
-```
-Cherchez l'adresse IPv4 dans la section de votre connexion réseau active (généralement "Ethernet adapter" ou "Wireless LAN adapter Wi-Fi").
-
-Exemple de configuration du fichier `.env`:
-```
-BASE_URL=http://192.168.1.XXX:8000/api
-```
+---
 
 ## Lancement du projet
 
+Pour lancer l'application en mode debug :
 ```bash
-# Pour mode debug
 flutter run
+```
 
-# Pour choisir un appareil spécifique
+Pour lister les appareils disponibles et lancer sur un appareil spécifique :
+```bash
 flutter devices
 flutter run -d <device_id>
 ```
 
-## Structure du projet et implémentation
+---
 
-### Architecture du projet
+## Dépendances principales
+
+Ce projet utilise plusieurs bibliothèques clés pour fonctionner. Voici un aperçu des plus importantes :
+
+| Dépendance | Utilisation |
+| --- | --- |
+| **`flutter_riverpod`** | Une solution de gestion d'état réactive et robuste. |
+| **`go_router`** | Un routeur déclaratif pour gérer la navigation de manière simple et prévisible. |
+| **`get_it`** | Un localisateur de services pour l'injection de dépendances, facilitant l'accès aux services. |
+| **`http`** | Le package standard pour effectuer des requêtes HTTP vers une API. |
+| **`get_storage`** | Une solution de stockage clé-valeur légère et rapide pour la persistance locale. |
+| **`flutter_dotenv`** | Pour charger les variables d'environnement à partir d'un fichier `.env`. |
+| **`cached_network_image`**| Pour afficher et mettre en cache des images provenant d'Internet. |
+| **`intl`** | Utilisé pour l'internationalisation et la localisation (i18n). |
+| **`uuid`** | Pour générer des identifiants uniques universels (UUID). |
+
+---
+
+## Structure du projet
+
+L'architecture du projet est conçue pour séparer les préoccupations et faciliter la maintenance.
 
 ```
 lib/
 ├── business/
-│   ├── models/    # Modèles de données
-│   └── services/  # Services abstraits (interfaces)
-├── framework/     # Implémentations des services
-├── pages/         # Interface utilisateur
-├── utils/         # Utilitaires
-├── main.dart      # Point d'entrée
-└── routers.dart   # Configuration des routes
+│   ├── models/    # Modèles de données (objets métier)
+│   └── services/  # Services abstraits (interfaces/contrats)
+├── framework/     # Implémentations concrètes des services
+├── pages/         # Couche de présentation (UI)
+├── utils/         # Fonctions et classes utilitaires
+├── main.dart      # Point d'entrée de l'application
+└── routers.dart   # Configuration de la navigation et des routes
 ```
 
-### Étapes d'implémentation
+---
 
-#### 1. Création d'un modèle
+## Guide d'implémentation
 
-Dans le dossier `lib/business/models`, créez un dossier pour chaque entité:
+Suivez ces étapes pour ajouter une nouvelle fonctionnalité.
 
+#### 1. Créer un modèle
+Dans `lib/business/models`, créez un fichier pour votre modèle de données.
 ```dart
 // lib/business/models/article/article_model.dart
 class Article {
   final String title;
-  ...  
-  Article({
-    required this.title,
-    ...
-  });
-  
+  // ... autres champs
+
+  Article({required this.title, /* ... */});
+
   factory Article.fromJson(Map<String, dynamic> json) {
-    return Article(
-      title: json['title'],
-      ...
-    );
+    return Article(title: json['title'], /* ... */);
   }
-  
+
   Map<String, dynamic> toJson() {
-    return {
-      'title': title,
-      ...
-    };
+    return {'title': title, /* ... */};
   }
 }
 ```
 
-#### 2. Création d'un service abstrait
-
-Dans le dossier `lib/business/services`, créez un dossier pour chaque service:
-
+#### 2. Créer un service abstrait
+Dans `lib/business/services`, définissez l'interface pour votre service.
 ```dart
 // lib/business/services/article/article_service.dart
 import '../../models/article/article_model.dart';
 
 abstract class ArticleService {
   Future<List<Article>> getAllArticles();
-  ...
+  // ... autres méthodes
 }
 ```
 
-#### 3. Implémentation du service
-
-Dans le dossier `lib/framework`, créez les implémentations:
-
+#### 3. Implémenter le service
+Dans `lib/framework`, écrivez l'implémentation concrète du service.
 ```dart
 // lib/framework/article/article_service_impl.dart
-import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../../business/models/article/article_model.dart';
-import '../../business/services/article/article_service.dart';
-import '../../utils/env.dart';
+// ... autres imports
 
 class ArticleServiceImpl implements ArticleService {
   final String baseUrl = Env.baseUrl;
-  
+
   @override
   Future<List<Article>> getAllArticles() async {
-    ...
+    // Logique de récupération des données (ex: appel HTTP)
   }
-  
-  ...
 }
 ```
 
-#### 4. Création des tests
-
+#### 4. Écrire des tests
+Créez des tests unitaires pour vos implémentations de service.
 ```dart
 // test/article_service_test.dart
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:http/http.dart' as http;
-import '../lib/business/models/article/article_model.dart';
-import '../lib/framework/article/article_service_impl.dart';
-
+// ...
 
 void main() {
-  // TESTS SUR LES IMPLEMENTATIONS
+  // Vos tests ici
 }
 ```
 
-#### 5. Création des pages
+#### 5. Créer les pages de l'interface utilisateur
+Pour chaque nouvelle page, il est recommandé de créer un dossier dans `lib/pages` contenant :
+*   Un fichier pour l'**état** (State) géré par Riverpod.
+*   Un fichier pour le **contrôleur** (Controller/StateNotifier).
+*   Un fichier pour la **vue** (la page Flutter elle-même).
 
-Pour chaque page, créez trois fichiers dans un dossier dédié:
-
-1. **État (State)**
+#### 6. Configurer les routes
+Ajoutez votre nouvelle page dans le fichier `lib/routers.dart`.
 ```dart
-// lib/pages/articles/articles_state.dart
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../business/models/article/article_model.dart';
-
-class ArticlesState {
-  final bool isLoading;
-  ...
-
-  ArticlesState({
-    this.isLoading = false,
-    ...
-  });
-
-  ArticlesState copyWith({
-    bool? isLoading,
-   ...
-  }) {
-    return ArticlesState(
-      isLoading: isLoading ?? this.isLoading,
-      ...
-    );
-  }
-}
-```
-
-2. **Contrôleur**
-```dart
-// lib/pages/articles/articles_controller.dart
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../business/services/article/article_service.dart';
-import '../../main.dart';
-import 'articles_state.dart';
-
-final articlesControllerProvider = StateNotifierProvider<ArticlesController, ArticlesState>((ref) {
-  return ArticlesController(getIt<ArticleService>());
-});
-
-class ArticlesController extends StateNotifier<ArticlesState> {
-  final ArticleService _articleService;
-  
-  ArticlesController(this._articleService) : super(ArticlesState()) {
-    // ACTION INITIALE
-  }
-  
-  Future<void> loadArticles() async {
-    // ACTION VERS UN SERVICE DEFINI
-  }
-  
-  // Autres méthodes
-}
-
-final articleCtrlProvider = StateNotifierProvider<ArticlesController, ArticlesState>((ref) {
-  //ref.keepAlive(); // SI LE CONTROLEUR ET LE STATE DOIVENT ETRE ACCESSIBLE DANS TOUTES LES AUTRES PAGES
-  return ArticlesController();
-});
-```
-
-3. **Page Flutter**
-```dart
-// lib/pages/articles/articles_page.dart
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'articles_controller.dart';
-
-class ExamplePage extends ConsumerStatefulWidget {
-    const HomePage({super.key});
-
-    @override
-    ConsumerState<ExamplePage> createState() => _ExamplePageState();
-}
-
-class _ExamplePageState extends ConsumerState<ExamplePage> {
-  const ArticlesPage({Key? key}) : super(key: key);
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-        // ACTION INITIALE DANS LA PAGE
-      var ctrl = ref.read({VOTRE_PRODIVDER}.notifier);
-      ctrl.loadArticles();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch({VOTRE_PROVIDER});
-    
-    return Scaffold(
-      appBar: AppBar(title: Text('Articles')),
-      body: Container(),
-    );
-  }
-}
-```
-
-#### 6. Configuration des routes
-
-Mettez à jour le fichier `lib/routers.dart` pour ajouter de nouvelles routes:
-
-```dart
-// Ajoutez ceci dans la liste authRoutes
+// ...
 GoRoute(
   path: "/app/articles",
   name: 'articles_page',
@@ -268,42 +191,28 @@ GoRoute(
     return ArticlesPage();
   },
 ),
+// ...
 ```
 
-## Génération d'un APK de production
+---
 
-Pour générer un APK de production:
+## Générer une version de production
 
-1. Mettez à jour la version dans `pubspec.yaml`:
-```yaml
-version: 1.0.0+1  # Format: version+numéro de build
-```
+### Android (APK)
+1.  Mettez à jour le code de version dans `pubspec.yaml` (`version: 1.0.0+1`).
+2.  Générez l'APK :
+    ```bash
+    flutter build apk --release
+    ```
+L'APK sera disponible dans `build/app/outputs/flutter-apk/app-release.apk`.
 
-2. Générez une clé de signature (à faire une seule fois)  (OPTIONEL):
-```bash
-keytool -genkey -v -keystore key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias key
-```
+Pour une configuration de signature avancée, suivez le [guide officiel de Flutter](https://docs.flutter.dev/deployment/android).
 
-3. Créez un fichier `key.properties` à la racine du projet (OPTIONEL):
-```
-storePassword=<mot de passe du keystore>
-keyPassword=<mot de passe de la clé>
-keyAlias=key
-storeFile=<chemin absolu vers key.jks>
-```
+---
 
-4. Configurez la signature dans `android/app/build.gradle`  (OPTIONEL)
+## Lignes directrices pour le développement
 
-5. Générez l'APK de production:
-```bash
-flutter build apk --release
-```
-
-L'APK sera disponible dans: `build/app/outputs/flutter-apk/app-release.apk`
-
-## Conseils de développement
-
-- Utilisez la branche `dev` pour le développement
-- Créez des branches de fonctionnalités à partir de `dev`
-- Testez votre code avant de faire un commit
-- Respectez l'architecture du projet # mobile_exemple
+- **Branche `dev`** : Utilisez cette branche pour le développement principal.
+- **Branches de fonctionnalités** : Créez toujours une nouvelle branche à partir de `dev` pour chaque nouvelle fonctionnalité.
+- **Tests** : Assurez-vous que votre code est testé avant de le merger.
+- **Respect de l'architecture** : Suivez la structure du projet pour maintenir la cohérence.
